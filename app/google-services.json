@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169851126548",
+    "project_id": "silentsignal-102bc",
+    "storage_bucket": "silentsignal-102bc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169851126548:android:7210dc98ea4c2fa8913801",
+        "android_client_info": {
+          "package_name": "com.azeemi.silentsignal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA575xW9CSGUbkIkysh0uX5itbXU6SSQY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
