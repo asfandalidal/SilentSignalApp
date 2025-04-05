@@ -1,4 +1,4 @@
-package com.azeemi.silentsignal
+package com.azeemi.silentsignal.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,26 +14,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.azeemi.silentsignal.domain.model.Announcement
+import com.azeemi.silentsignal.config.MyFirebaseMessagingService
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import kotlin.math.exp
 
 @Composable
-fun AnnouncementListScreen(navController: NavController, title: String?, body: String?) {
+fun AnnouncementListScreen(navController: NavController, viewModel: MainViewModel) {
     val announcements = remember { mutableStateListOf<Announcement>() }
 
-    // If app opened from notification, add the announcement
-    LaunchedEffect(title, body) {
-        if (!title.isNullOrEmpty() && !body.isNullOrEmpty()) {
-            announcements.add(Announcement(announcements.size + 1, body, title))
+    val message by viewModel.message
+    val expireAt by viewModel.expireAt
+
+    // Update the list when message and timestamp are received
+    LaunchedEffect(message, expireAt) {
+        if (message.isNotEmpty() && expireAt.isNotEmpty()) {
+            announcements.add(Announcement(System.currentTimeMillis().toInt(), message, expireAt))
         }
     }
 
-    // Function to add new announcements dynamically
-    fun addAnnouncement(message: String, timestamp: String) {
-        announcements.add(Announcement(announcements.size + 1, message, timestamp))
+    fun addAnnouncement(message: String, expireAt: String) {
+        announcements.add(Announcement(System.currentTimeMillis().toInt(), message, expireAt))
     }
 
-    // Update UI dynamically when a new notification is received
-    MyFirebaseMessagingService.onNewAnnouncement = { title, body ->
-        addAnnouncement(body, title)  // Title acts as the timestamp
+    // Listen for new announcements via FCM
+    LaunchedEffect(Unit) {
+        MyFirebaseMessagingService.onNewAnnouncement = { _, body, expireAt ->
+            viewModel.updateMessage(body,expireAt)
+        }
     }
 
     Box(
@@ -54,7 +63,9 @@ fun AnnouncementListScreen(navController: NavController, title: String?, body: S
             LazyColumn {
                 items(announcements) { announcement ->
                     AnnouncementCard(announcement) {
-                        navController.navigate("announcementDetail/${announcement.message}/${announcement.timestamp}")
+                        val encodedMessage = URLEncoder.encode(announcement.message, StandardCharsets.UTF_8.name())
+                        val encodedTime = URLEncoder.encode(announcement.expiresAt, StandardCharsets.UTF_8.name())
+                        navController.navigate("announcement_detail/$encodedMessage/$encodedTime")
                     }
                 }
             }
@@ -62,19 +73,17 @@ fun AnnouncementListScreen(navController: NavController, title: String?, body: S
     }
 }
 
+
 @Composable
 fun AnnouncementCard(announcement: Announcement, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .background(Color(0xFF323248))
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF323248))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = announcement.message,
                 fontSize = 18.sp,
@@ -83,7 +92,7 @@ fun AnnouncementCard(announcement: Announcement, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = announcement.timestamp,
+                text = announcement.expiresAt,
                 fontSize = 14.sp,
                 color = Color(0xFFB0B0D9)
             )

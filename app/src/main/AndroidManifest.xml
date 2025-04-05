@@ -18,7 +18,7 @@
 
         <!-- Firebase Messaging Service -->
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name=".config.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -29,6 +29,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.SilentSignal">
             <intent-filter>
@@ -36,6 +37,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
 
     </application>
 </manifest>

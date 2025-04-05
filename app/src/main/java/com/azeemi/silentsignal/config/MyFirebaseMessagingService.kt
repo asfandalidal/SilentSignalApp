@@ -1,4 +1,4 @@
-package com.azeemi.silentsignal
+package com.azeemi.silentsignal.config
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -6,38 +6,43 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
+import com.azeemi.silentsignal.MainActivity
+import com.azeemi.silentsignal.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
-        var onNewAnnouncement: ((String, String) -> Unit)? = null
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_MESSAGE = "body"
+        const val EXTRA_EXPIREAT = "expireAt"
+
+        var onNewAnnouncement: ((String, String,String) -> Unit)? = null
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        super.onMessageReceived(remoteMessage)
+        if (remoteMessage.data.isNotEmpty()) {
+            val data = remoteMessage.data
+            val title = data[EXTRA_TITLE] ?: "New Announcement"
+            val body = data[EXTRA_MESSAGE] ?: ""
+            val expireAt = data[EXTRA_EXPIREAT]?:""
+            Log.d("FCM", "Received announcement: title=$title, body=$body,expireAt=$expireAt")
 
-        remoteMessage.notification?.let {
-            val title = it.title ?: "New Announcement"
-            val body = it.body ?: ""
+            showNotification(title, body,expireAt)
 
-            // Hide the body in notification tray
-            showNotification(title, body)
-
-            // Notify UI dynamically
-            onNewAnnouncement?.invoke(title, body)
+            onNewAnnouncement?.invoke(title, body, expireAt)
+        } else {
+            Log.w("FCM", "Received message with empty data")
         }
     }
 
-    private fun showNotification(title: String, body: String) {
+    private fun showNotification(title: String, body: String,expireAt:String) {
         val channelId = "announcements_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -49,14 +54,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val encodedMessage = URLEncoder.encode(body, StandardCharsets.UTF_8.name())
-        val encodedTimestamp = URLEncoder.encode(title, StandardCharsets.UTF_8.name())
-
-        // Create an intent to open MainActivity with the announcement details
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra("message", encodedMessage)
-            putExtra("timestamp", encodedTimestamp)
+            putExtra(EXTRA_TITLE, title)
+            putExtra(EXTRA_MESSAGE, body)
+            putExtra(EXTRA_EXPIREAT,expireAt)
         }
 
         val pendingIntent = TaskStackBuilder.create(this).run {
@@ -66,14 +68,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.alarm)
-            .setContentTitle(title)
-            .setContentText("Tap to view announcement")  // Hides actual body in tray
+            .setContentTitle("New Announcement")
+            .setContentText("Tap to view announcement")
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI)
             .build()
 
-        notificationManager.notify(0, notification)
+        val notificationId = System.currentTimeMillis().toInt()
+        notificationManager.notify(notificationId, notification)
     }
 }
