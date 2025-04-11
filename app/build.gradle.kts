@@ -72,5 +72,6 @@ dependencies {
     implementation ("com.google.android.gms:play-services-base:18.0.1")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
+    implementation ("androidx.compose.animation:animation:1.7.8")
 
 }
