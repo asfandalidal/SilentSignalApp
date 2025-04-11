@@ -20,17 +20,25 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         const val EXTRA_TITLE = "title"
         const val EXTRA_MESSAGE = "body"
         const val EXTRA_EXPIREAT = "expireAt"
+
         var onNewAnnouncement: ((String, String,String) -> Unit)? = null
+    }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d("FCM", "New token generated: $token")
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         if (remoteMessage.data.isNotEmpty()) {
             val data = remoteMessage.data
             val title = data[EXTRA_TITLE] ?: "New Announcement"
-            val body = data[EXTRA_MESSAGE] ?: "" //announcement body
-            val expireAt = data[EXTRA_EXPIREAT]?:"" //announcement expiry time
+            val body = data[EXTRA_MESSAGE] ?: ""
+            val expireAt = data[EXTRA_EXPIREAT]?:""
             Log.d("FCM", "Received announcement: title=$title, body=$body,expireAt=$expireAt")
+
             showNotification(title, body,expireAt)
+
             onNewAnnouncement?.invoke(title, body, expireAt)
         } else {
             Log.w("FCM", "Received message with empty data")
