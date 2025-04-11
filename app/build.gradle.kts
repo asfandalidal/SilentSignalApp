@@ -33,6 +33,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -71,6 +72,8 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx:23.3.1")
     implementation ("com.google.android.gms:play-services-base:18.0.1")
     implementation("androidx.navigation:navigation-compose:2.7.5")
-    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
+//    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation ("androidx.compose.animation:animation:1.7.8")
 
 }

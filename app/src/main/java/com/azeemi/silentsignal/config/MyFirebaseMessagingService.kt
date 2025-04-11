@@ -24,6 +24,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         var onNewAnnouncement: ((String, String,String) -> Unit)? = null
     }
 
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d("FCM", "New token generated: $token")
+    }
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         if (remoteMessage.data.isNotEmpty()) {
             val data = remoteMessage.data
