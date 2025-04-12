@@ -23,7 +23,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -69,11 +70,16 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // firebase
     implementation("com.google.firebase:firebase-messaging-ktx:23.3.1")
     implementation ("com.google.android.gms:play-services-base:18.0.1")
     implementation("androidx.navigation:navigation-compose:2.7.5")
-//    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation ("androidx.compose.animation:animation:1.7.8")
+    implementation ("androidx.compose.material3:material3:1.3.2")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+
 
 }
