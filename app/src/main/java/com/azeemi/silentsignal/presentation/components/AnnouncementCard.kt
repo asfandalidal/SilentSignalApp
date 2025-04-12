@@ -1,5 +1,6 @@
-package com.azeemi.silentsignal.presentation
+package com.azeemi.silentsignal.presentation.components
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,8 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.azeemi.silentsignal.domain.model.Announcement
 
+@SuppressLint("UseOfNonLambdaOffsetOverload")
 @Composable
 fun AnnouncementCard(
     message:String,
@@ -147,11 +149,11 @@ fun PulsingIcon() {
     )
 
     Icon(
-        imageVector = Icons.Default.Email,
+        imageVector = Icons.Default.Campaign ,
         contentDescription = null,
         tint = Color(0xFFFFC107),
         modifier = Modifier
-            .size(26.dp)
+            .size(30.dp)
             .scale(scale)
     )
 }

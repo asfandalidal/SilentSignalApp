@@ -1,5 +1,6 @@
 package com.azeemi.silentsignal.config
 
+import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import com.azeemi.silentsignal.MainActivity
 import com.azeemi.silentsignal.R
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -21,7 +23,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         const val EXTRA_MESSAGE = "body"
         const val EXTRA_EXPIREAT = "expireAt"
 
-        var onNewAnnouncement: ((String, String,String) -> Unit)? = null
+        var onNewAnnouncement: ((String, String, String) -> Unit)? = null
     }
 
     override fun onNewToken(token: String) {
@@ -34,20 +36,27 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val data = remoteMessage.data
             val title = data[EXTRA_TITLE] ?: "New Announcement"
             val body = data[EXTRA_MESSAGE] ?: ""
-            val expireAt = data[EXTRA_EXPIREAT]?:""
-            Log.d("FCM", "Received announcement: title=$title, body=$body,expireAt=$expireAt")
+            val expireAt = data[EXTRA_EXPIREAT] ?: ""
 
-            showNotification(title, body,expireAt)
+            Log.d("FCM", "Received announcement: title=$title, body=$body, expireAt=$expireAt")
 
-            onNewAnnouncement?.invoke(title, body, expireAt)
+            if (isAppInForeground()) {
+                // Live update without showing notification
+                onNewAnnouncement?.invoke(title, body, expireAt)
+            } else {
+                // Show push notification normally
+                showNotification(title, body, expireAt)
+            }
         } else {
             Log.w("FCM", "Received message with empty data")
         }
     }
 
-    private fun showNotification(title: String, body: String,expireAt:String) {
+    private fun showNotification(title: String, body: String, expireAt: String) {
         val channelId = "announcements_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Create notification channel (Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -63,7 +72,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra(EXTRA_TITLE, title)
             putExtra(EXTRA_MESSAGE, body)
-            putExtra(EXTRA_EXPIREAT,expireAt)
+            putExtra(EXTRA_EXPIREAT, expireAt)
         }
 
         val pendingIntent = TaskStackBuilder.create(this).run {
@@ -84,4 +93,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notificationId = System.currentTimeMillis().toInt()
         notificationManager.notify(notificationId, notification)
     }
+
+    private fun isAppInForeground(): Boolean {
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val appProcesses = activityManager.runningAppProcesses
+        val packageName = applicationContext.packageName
+        return appProcesses?.any {
+            it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                    it.processName == packageName
+        } ?: false
+    }
+}
+fun subscribeFirebaseNotification() {
+    FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("FCM", "Subscribed to announcements topic")
+            } else {
+                Log.e("FCM", "Failed to subscribe to topic", task.exception)
+            }
+        }
 }

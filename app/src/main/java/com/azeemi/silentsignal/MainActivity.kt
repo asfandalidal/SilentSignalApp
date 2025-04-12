@@ -6,29 +6,32 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.azeemi.silentsignal.navigation.SetupNavigation
 import com.azeemi.silentsignal.ui.theme.SilentSignalTheme
 import com.azeemi.silentsignal.config.MyFirebaseMessagingService
+import com.azeemi.silentsignal.config.subscribeFirebaseNotification
 import com.google.firebase.messaging.FirebaseMessaging
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-//        AndroidThreeTen.init(this)
-        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("FCM", "Subscribed to announcements topic")
-                } else {
-                    Log.e("FCM", "Failed to subscribe to topic", task.exception)
-                }
-            }
+        subscribeFirebaseNotification()
 
-        // Extract extras from the intent (from notification tap)
         val body = intent?.getStringExtra(MyFirebaseMessagingService.EXTRA_MESSAGE).orEmpty()
         val expireAt = intent?.getStringExtra(MyFirebaseMessagingService.EXTRA_EXPIREAT).orEmpty()
+
+        val liveAnnouncementMessage = mutableStateOf(body)
+        val liveAnnouncementExpireAt = mutableStateOf(expireAt)
+
+        MyFirebaseMessagingService.onNewAnnouncement = { _, newMessage, newExpireAt ->
+            liveAnnouncementMessage.value = newMessage
+            liveAnnouncementExpireAt.value = newExpireAt
+        }
 
         setContent {
             SilentSignalTheme {
@@ -36,8 +39,8 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     SetupNavigation(
                         navController = navController,
-                        message = body,
-                        timestamp = expireAt
+                        messageState = liveAnnouncementMessage,
+                        timestampState = liveAnnouncementExpireAt
                     )
                 }
             }

@@ -1,4 +1,4 @@
-package com.azeemi.silentsignal.presentation
+package com.azeemi.silentsignal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.mutableStateOf
